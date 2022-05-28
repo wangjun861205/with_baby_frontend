@@ -1,14 +1,18 @@
-import { Text, Button, StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
+import { Text, Button, StyleSheet, View, TouchableOpacity } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 const Home = ({navigation}: { navigation: any }) => {
-    return <>
-        <View style={[styles.textContainer, styles.yellow]}>
+    return <View>
+        <TouchableOpacity onPress={() => {
+            navigation.navigate("PlayingList");
+        }}style={[styles.textContainer, styles.yellow]} >
             <Text style={styles.text}>玩</Text>
-        </View>
-        <View style={[styles.textContainer, styles.cyan]}>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.textContainer, styles.cyan]}>
             <Text style={styles.text}>吃</Text>
-        </View>
-    </>
+        </TouchableOpacity>
+    </View>
 }
 
 

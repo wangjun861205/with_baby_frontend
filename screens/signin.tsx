@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { TextInput, View, StyleSheet, Button } from "react-native";
+import * as SecureStore from "expo-secure-store";
 
-const Signin = () => {
+const Signin = ({navigation}: {navigation: any}) => {
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
 
@@ -16,7 +17,7 @@ const Signin = () => {
                 phone: phone,
                 password: password
             })
-        }).then(res => alert(res.status)).catch(err => alert(err));
+        }).then(res => res.text().then(s => SecureStore.setItemAsync("JWT_TOKEN", s).then(navigation.navigate("Home")) )).catch(err => alert(err));
     }
     return <View>
         <TextInput style={styles.phone} placeholder="Phone..." onChangeText={setPhone}/>
