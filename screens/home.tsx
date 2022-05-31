@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Text, Button, StyleSheet, View, TouchableOpacity } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import * as Location from "expo-location";
 
 const Home = ({navigation}: { navigation: any }) => {
     return <View>

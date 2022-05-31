@@ -6,12 +6,13 @@ import Signin from "./screens/signin";
 import Home from './screens/home';
 import Profile from './screens/profile';
 import { PlayingList, PlayingCreate } from "./screens/playing"
+import * as Location from "expo-location";
 
 
-export const BASE_URL = "http://192.168.3.11:8000";
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  Location.requestForegroundPermissionsAsync().then(res => {alert(res)}).catch(err => alert(err));
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName='Home'>

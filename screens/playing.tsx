@@ -1,31 +1,37 @@
 import {useEffect, useState} from "react";
-import { View, TextInput, Button } from "react-native";
-import { BASE_URL } from "../App";
+import { View, TextInput, Button, Text } from "react-native";
 import * as SecurityStore from "expo-secure-store"
-import Geolocation from "react-native-geolocation-service";
+import * as Location from "expo-location";
+import { getLocation } from "../utils/location";
+import { getJWTToken } from "../utils/jwt";
+import { nearbyPlayings } from "../apis/playing";
+import { BASE_URL } from "../apis/urls";
+import { Playing } from "../apis/models";
 
-interface Playing {
-    name: string,
-    latitude: number,
-    longitude: number,
-}
 
-export const PlayingList = ({navigation}: {navigation: any}) => {
+
+
+export const PlayingList = ({navigation, route}: {navigation: any, route: any}) => {
     const [page, setPage] = useState(1);
     const [size, setSize] = useState(10);
     const [playings, setPlayings] = useState<Playing[]>([]);
+    const query = async () => {
+        try {
+            const token = await getJWTToken();
+            const {coords: {latitude, longitude}} = await getLocation();
+            return  nearbyPlayings({page: page, size: size, latitude: latitude, longitude: longitude, token});
+        } catch(e) {
+            return Promise.reject(e);
+        }
+    }
     const fetchData = () => {
-        Geolocation.getCurrentPosition(loc => {
-            fetch(BASE_URL + `/api/playings?page=${page}&size=${size}&latitude=${loc.coords.latitude}&longitude=${loc.coords.longitude}`, {method: "get"})
-            .then(res => {
-                res.json().then(obj => setPlayings(obj)).catch(err => console.error(err))
-            })
-            .catch(err => console.error(err));
-        }, err => alert(err))
+        query().then(res => {
+            setPlayings(res.list);
+        }).catch(e => alert(e));
     }
     useEffect(fetchData, []);
     return <View>
-        { playings.map(p => <div>{p.name}</div>) }
+        { playings.map(p => <Text key={p.id}>{p.name}</Text>) }
     </View>
 }
 
@@ -36,7 +42,7 @@ interface CreateRequest {
 
 }
 
-export const PlayingCreate = ({navigation}: {navigation: any}) => {
+export const PlayingCreate = ({navigation, route}: {navigation: any, route: any}) => {
     const [data, setData] = useState<CreateRequest>({name: "", latitude: 0, longitude: 0});
     const submit = () => {
         SecurityStore.getItemAsync("JWT_TOKEN").then(v => {
