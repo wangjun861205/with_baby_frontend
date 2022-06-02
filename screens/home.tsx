@@ -3,11 +3,11 @@ import { Text, Button, StyleSheet, View, TouchableOpacity } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import * as Location from "expo-location";
 
-const Home = ({navigation}: { navigation: any }) => {
+const Home = ({ navigation }: { navigation: any }) => {
     return <View>
         <TouchableOpacity onPress={() => {
             navigation.navigate("PlayingList");
-        }}style={[styles.textContainer, styles.yellow]} >
+        }} style={[styles.textContainer, styles.yellow]} >
             <Text style={styles.text}>玩</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.textContainer, styles.cyan]}>

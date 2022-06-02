@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { View, TextInput, Button, Text } from "react-native";
+import { View, TextInput, Button, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
 import * as SecurityStore from "expo-secure-store"
-import * as Location from "expo-location";
 import { getLocation } from "../utils/location";
 import { getJWTToken } from "../utils/jwt";
 import { nearbyPlayings } from "../apis/playing";
 import { BASE_URL } from "../apis/urls";
 import { Playing } from "../apis/models";
+import AppLink from "react-native-app-link";
 
 
 
@@ -30,6 +30,11 @@ export const PlayingList = ({ navigation, route }: { navigation: any, route: any
             if (_mounted) setPlayings(res.list);
         }).catch(e => alert(e));
     }
+    const jumpToNav = (latitude: number, longitude: number) => {
+        AppLink.maybeOpenURL(`baidumap://map/navi?coord_type=wgs84&location=${latitude},${longitude}`, { appName: "BaiduMaps", appStoreId: 0, appStoreLocale: "cn", playStoreId: "" })
+            .then(v => { })
+            .catch(e => alert(e));
+    }
     useEffect(() => {
         fetchData();
         return () => {
@@ -37,9 +42,30 @@ export const PlayingList = ({ navigation, route }: { navigation: any, route: any
         }
     }, []);
     return <View>
-        {playings.map(p => <Text key={p.id}>{p.name}</Text>)}
+        <FlatList data={playings} renderItem={({ item, index }) =>
+            <TouchableOpacity style={index % 2 == 0 ? [styles["list-row"], styles["list-row-even"]] : [styles["list-row"], styles["list-row-odd"]]} onPress={() => {
+                jumpToNav(item.latitude, item.latitude);
+            }}><Text>名称:{item.name} 发现者:{item.discoverer.name} 距离:{Math.round(item.distance) + "m"}</Text></TouchableOpacity>
+        } />
     </View>
 }
+
+
+const styles = StyleSheet.create({
+    "list-row": {
+        height: 50,
+        width: 100,
+    },
+    "list-row-odd": {
+        backgroundColor: "#aaffff",
+    },
+    "list-row-even": {
+        backgroundColor: "#cceeee",
+    }
+
+})
+
+
 
 interface CreateRequest {
     name: string,

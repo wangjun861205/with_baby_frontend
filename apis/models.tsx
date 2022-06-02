@@ -8,8 +8,9 @@ export interface Playing {
     name: string
     latitude: number,
     longitude: number,
-    discoverer:  User,
+    discoverer: User,
     update_on: string,
     create_on: string,
+    distance: number,
 }
 
