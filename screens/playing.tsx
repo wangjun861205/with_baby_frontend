@@ -7,6 +7,8 @@ import { nearbyPlayings } from "../apis/playing";
 import { BASE_URL } from "../apis/urls";
 import { Playing } from "../apis/models";
 import AppLink from "react-native-app-link";
+import { ImagePreview } from "../components/image"
+import * as FS from "expo-file-system";
 
 
 
@@ -32,8 +34,8 @@ export const PlayingList = ({ navigation, route }: { navigation: any, route: any
     }
     const jumpToNav = (latitude: number, longitude: number) => {
         AppLink.maybeOpenURL(`baidumap://map/navi?coord_type=wgs84&location=${latitude},${longitude}`, { appName: "BaiduMaps", appStoreId: 0, appStoreLocale: "cn", playStoreId: "" })
-            .then(v => { })
-            .catch(e => alert(e));
+            .then((_: any) => { })
+            .catch((e: any) => alert(e));
     }
     useEffect(() => {
         fetchData();
@@ -47,6 +49,7 @@ export const PlayingList = ({ navigation, route }: { navigation: any, route: any
                 jumpToNav(item.latitude, item.latitude);
             }}><Text>名称:{item.name} 发现者:{item.discoverer.name} 距离:{Math.round(item.distance) + "m"}</Text></TouchableOpacity>
         } />
+        <Button title="新建" onPress={() => navigation.navigate("PlayingCreate")} />
     </View>
 }
 
@@ -54,13 +57,17 @@ export const PlayingList = ({ navigation, route }: { navigation: any, route: any
 const styles = StyleSheet.create({
     "list-row": {
         height: 50,
-        width: 100,
+        width: 400,
     },
     "list-row-odd": {
         backgroundColor: "#aaffff",
     },
     "list-row-even": {
         backgroundColor: "#cceeee",
+    },
+    image: {
+        width: 120,
+        height: 120,
     }
 
 })
@@ -71,38 +78,105 @@ interface CreateRequest {
     name: string,
     latitude: number,
     longitude: number,
+    images: string[],
 
 }
 
 export const PlayingCreate = ({ navigation, route }: { navigation: any, route: any }) => {
-    const [data, setData] = useState<CreateRequest>({ name: "", latitude: 0, longitude: 0 });
-    const submit = () => {
-        SecurityStore.getItemAsync("JWT_TOKEN").then(v => {
-            if (v === null) {
+    const [data, setData] = useState<CreateRequest>({ name: "", latitude: 0, longitude: 0, images: [] });
+    let isMounted = true;
+    useEffect(() => {
+        if (isMounted) {
+            getLocation().then((loc) => {
+                if (isMounted) {
+                    setData((old) => {
+                        return {
+                            ...old,
+                            latitude: loc.coords.latitude,
+                            longitude: loc.coords.longitude,
+                        }
+                    });
+                }
+                return () => {
+                    isMounted = false;
+                }
+            }).catch(reason => alert(reason));
+        }
+    }, []);
+
+    const uploadImage = async (jwt: string): Promise<number[]> => {
+        let formData = new FormData();
+        for (var img of data.images) {
+           const content = await FS.readAsStringAsync(img, {encoding: FS.EncodingType.Base64});
+           formData.append("file", content);
+        }
+        const res = await fetch(BASE_URL + "/api/upload", {
+            method: "POST",
+            headers: {
+                "JWT_TOKEN": jwt,
+            },
+            body: formData,
+        });
+        if (res.status !== 200) {
+            return Promise.reject(res.statusText);
+        }
+        return res.json()
+    }
+
+    const submit = async () => {
+            const jwt = await SecurityStore.getItemAsync("JWT_TOKEN");
+            if (!jwt) {
                 navigation.navigate("Signin");
-                return
+                return Promise.reject("empty jwt token");
             }
-            fetch(BASE_URL + '/api/playings', {
+            const imageIds = await uploadImage(jwt);
+            const loc = await getLocation();
+            const res = await fetch(BASE_URL + '/api/playings', {
                 method: "post",
                 headers: {
                     "Content-Type": "application/json",
-                    "JWT_TOKEN": v,
+                    "JWT_TOKEN": jwt,
                 },
-                body: JSON.stringify(data)
-            }).then(res => {
-                if (res.status !== 200) {
-                    alert(res.body);
-                    return
-                }
-                alert("success");
-            }).catch(err => alert(err));
-        }).catch(err => alert(err));
+                body: JSON.stringify({
+                    name: data.name,
+                    latitude: data.latitude,
+                    longitude: data.longitude,
+                    images: imageIds,
+                })
+            });
+            if (res.status !== 200) {
+                return Promise.reject("failed to create playing")
+            }
+    }
+
+    const deleteImage = (uri: string) => {
+        setData(
+            (old) => ({
+                ...old,
+                images: old.images.filter(u => u !== uri)
+            })
+        )
+    }
+
+    const addImage = (uri: string) => {
+        console.log(data);
+        setData((old) => ({
+            ...old,
+            images: [...old.images, uri],
+        }))
     }
 
     return <View>
         <TextInput placeholder="Name" onChangeText={(name) => { setData(old => ({ ...old, name: name })) }} />
-        <TextInput placeholder="Latitude" onChangeText={(name) => { setData(old => ({ ...old, name: name })) }} />
-        <TextInput placeholder="Longitude" onChangeText={(name) => { setData(old => ({ ...old, name: name })) }} />
-        <Button title="Create" onPress={submit} />
+        <View style={{flexDirection: "row", justifyContent: "space-evenly", flexWrap: "wrap"}}>
+            {
+                data.images.map(uri => <ImagePreview style={styles.image} key={uri} uri={uri} onDelete={deleteImage}/>)
+            }
+        </View>
+        <Button title="拍照" onPress={() => {
+            navigation.navigate("Photo", { addImage: addImage });
+        }} />
+        <Button title="创建" onPress={() => { submit().then(v => {}).catch(reason => alert(reason))}} />
     </View>
 }
+

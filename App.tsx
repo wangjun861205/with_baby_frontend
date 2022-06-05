@@ -7,6 +7,8 @@ import Home from './screens/home';
 import Profile from './screens/profile';
 import { PlayingList, PlayingCreate } from "./screens/playing"
 import * as Location from "expo-location";
+import { Photo } from "./screens/photo";
+
 
 
 const Stack = createNativeStackNavigator();
@@ -21,6 +23,7 @@ export default function App() {
         <Stack.Screen name="Profile" component={Profile} />
         <Stack.Screen name="PlayingList" component={PlayingList} />
         <Stack.Screen name="PlayingCreate" component={PlayingCreate} />
+        <Stack.Screen name="Photo" component={Photo}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
