@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react"
 const useAsync = (asyncF: () => Promise<any>) => {
 	const [res, setRes] = useState(null);
 	const [err, setErr] = useState(null);
-	const [stat, setStat] = useState("pending");
+	const [stat, setStat] = useState("running");
 
 	const execute = useCallback(() => {
 		asyncF().then(r => {
