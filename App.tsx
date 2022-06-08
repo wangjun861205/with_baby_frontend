@@ -8,13 +8,14 @@ import Profile from './screens/profile';
 import { PlayingList, PlayingCreate } from "./screens/playing"
 import * as Location from "expo-location";
 import { Photo } from "./screens/photo";
+import { EatingCreate } from './screens/eating';
 
 
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  Location.requestForegroundPermissionsAsync().then(res => {alert(res)}).catch(err => alert(err));
+  Location.requestForegroundPermissionsAsync().then(res => { alert(res) }).catch(err => alert(err));
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName='Home'>
@@ -23,7 +24,8 @@ export default function App() {
         <Stack.Screen name="Profile" component={Profile} />
         <Stack.Screen name="PlayingList" component={PlayingList} />
         <Stack.Screen name="PlayingCreate" component={PlayingCreate} />
-        <Stack.Screen name="Photo" component={Photo}/>
+        <Stack.Screen name="Photo" component={Photo} />
+        <Stack.Screen name="EatingCreate" component={EatingCreate} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { Image, View, StyleSheet, TouchableOpacity, Text, ViewProps } from "react-native";
+import { Camera } from "expo-camera";
+
 
 export interface ImagePreviewProp extends ViewProps {
     uri: string,
-    onDelete: (uri: string) => void, 
+    onDelete: (uri: string) => void,
 }
-export const ImagePreview = ({uri, onDelete, style}: ImagePreviewProp) => {
+export const ImagePreview = ({ uri, onDelete, style }: ImagePreviewProp) => {
     return <View style={style}>
         <TouchableOpacity style={styles.delete} onPress={() => onDelete(uri)}><Text>x</Text></TouchableOpacity>
-        <Image style={styles.image} source={{uri: uri}} />
+        <Image style={styles.image} source={{ uri: uri }} />
     </View>
 }
 
