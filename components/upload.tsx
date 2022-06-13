@@ -7,38 +7,77 @@ import { readAsStringAsync } from "expo-file-system";
 import * as Picker from "expo-image-picker";
 
 export interface UploadProps extends ViewProps {
-    url: string
+    hasCanceled: boolean,
+    setIDs: (ids: number[]) => void,
 }
 
-export const Upload = () => {
-    const [uris, setUris] = useState<string[]>([]);
+type UploadState = {
+    uri: string,
+    status: "Uploading" | "Error" | "Done"
+    id: number | null,
+}
+
+export const Upload = ({ hasCanceled, setIDs }: UploadProps) => {
+    const [states, setStates] = useState<UploadState[]>([]);
+    const doUpload = async (uri: string) => {
+        try {
+            const content = await readAsStringAsync(uri, { encoding: FS.EncodingType.Base64 });
+            const id = await upload(content);
+            setStates(old => {
+                const i = old.findIndex(s => { s.uri == uri });
+                if (i === -1) {
+                    return old;
+                }
+                old[i].status = "Done";
+                old[i].id = id;
+                return old;
+            });
+            setIDs(states.filter(s => s.id).map(s => s.id!));
+        } catch (e) {
+            setStates(old => {
+                const i = old.findIndex(s => { s.uri == uri });
+                if (i === -1) {
+                    return old
+                }
+                old[i].status = "Error";
+                return old;
+            });
+        }
+    }
+
     const pick = async () => {
+        if (hasCanceled) {
+            return;
+        }
         const result = await Picker.launchImageLibraryAsync({
             mediaTypes: Picker.MediaTypeOptions.Images,
         });
         if (!result.cancelled) {
-            setUris(old => [...old, result.uri]);
+            doUpload(result.uri).then();
         }
     }
     const camera = async () => {
+        if (hasCanceled) {
+            return;
+        }
         const result = await Picker.launchCameraAsync({
             mediaTypes: Picker.MediaTypeOptions.Images,
         });
         if (!result.cancelled) {
-            setUris(old => [...old, result.uri]);
+            doUpload(result.uri).then()
         }
     }
     const del = (uri: string) => {
-        setUris(old => old.filter(u => u !== uri));
+        setStates(old => old.filter(u => u.uri !== uri));
     }
     return (
         <View style={styles.button_container}>
             <View style={styles.image_container}>
                 {
-                    uris.map(u => <View style={styles.preview} key={u}>
-                        <TouchableOpacity style={styles.delete_button} onPress={() => { del(u)}}><Text>X</Text></TouchableOpacity>
-                        <Image style={styles.image} source={{uri: u}}/>
-                        </View>)
+                    states.map(u => <View style={styles.preview} key={u.uri}>
+                        <TouchableOpacity style={styles.delete_button} onPress={() => { del(u.uri) }}><Text>X</Text></TouchableOpacity>
+                        <Image style={styles.image} source={{ uri: u.uri }} />
+                    </View>)
                 }
             </View>
             <View style={styles.button_container}>
@@ -71,8 +110,8 @@ const styles = StyleSheet.create({
         height: 150,
     },
     image: {
-       width: "100%",
-       height: "100%", 
+        width: "100%",
+        height: "100%",
         borderRadius: 10,
     },
     delete_button: {

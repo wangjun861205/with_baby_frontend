@@ -1,11 +1,9 @@
 import { BASE_URL } from "@env";
 import { getJWTToken } from "../utils/jwt";
 
-export const upload = async (list: string[] | Blob[]) => {
+export const upload = async (content: string | Blob): Promise<number> => {
     const data = new FormData();
-    for (var item of list) {
-        data.append("file", item);
-    }
+    data.append("file", content);
     const token = await getJWTToken();
     const res = await fetch(BASE_URL + "/upload", {
         method: "POST",
@@ -17,5 +15,5 @@ export const upload = async (list: string[] | Blob[]) => {
     if (res.status !== 200) {
         return Promise.reject(res.status);
     }
-    return await res.json()
+    return res.json()
 }
