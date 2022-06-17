@@ -9,6 +9,7 @@ import { PlayingList, PlayingCreate } from "./screens/playing"
 import * as Location from "expo-location";
 import { Photo } from "./screens/photo";
 import { EatingCreate } from './screens/eating';
+import { CreateLocation } from './screens/location';
 
 
 
@@ -26,6 +27,7 @@ export default function App() {
         <Stack.Screen name="PlayingCreate" component={PlayingCreate} />
         <Stack.Screen name="Photo" component={Photo} />
         <Stack.Screen name="EatingCreate" component={EatingCreate} />
+        <Stack.Screen name="CreateLocation" component={CreateLocation} />
       </Stack.Navigator>
     </NavigationContainer>
   );

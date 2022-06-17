@@ -10,7 +10,7 @@ const Home = ({ navigation }: { navigation: any }) => {
         }} style={[styles.textContainer, styles.yellow]} >
             <Text style={styles.text}>玩</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => { navigation.navigate("EatingCreate") }} style={[styles.textContainer, styles.cyan]}>
+        <TouchableOpacity onPress={() => { navigation.navigate("CreateLocation") }} style={[styles.textContainer, styles.cyan]}>
             <Text style={styles.text}>吃</Text>
         </TouchableOpacity>
     </View>

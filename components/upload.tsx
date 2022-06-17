@@ -35,7 +35,7 @@ export const Upload = ({ setIDs }: UploadProps) => {
                 } else {
                     l[i].status = "Done";
                     l[i].id = ids[0];
-                } 
+                }
                 setIDs(l.filter(s => s.status === "Done").map(s => s.id!));
                 return l;
             });
@@ -105,7 +105,8 @@ const styles = StyleSheet.create({
         flexWrap: "wrap",
         flexDirection: "row",
         width: "100%",
-        height: "100%",
+        height: 200,
+        // height: "100%",
     },
     button: {
         width: "20%",
