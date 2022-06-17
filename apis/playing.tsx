@@ -12,7 +12,6 @@ export interface NearbyPlayingsParams {
 
 export const nearbyPlayings = async ({ page, size, latitude, longitude, token }: NearbyPlayingsParams): Promise<{ list: Playing[], total: number }> => {
     try {
-        console.log("calling nearbyPlayings");
         const res = await fetch(BASE_URL + `/api/playings?page=${page}&size=${size}&latitude=${latitude}&longitude=${longitude}`,
             {
                 method: "get",
