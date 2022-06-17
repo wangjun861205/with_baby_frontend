@@ -15,7 +15,7 @@ import { EatingCreate } from './screens/eating';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  Location.requestForegroundPermissionsAsync().then(res => { alert(res) }).catch(err => alert(err));
+  Location.requestForegroundPermissionsAsync().then(res => { console.log(res) }).catch(err => alert(err));
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName='Home'>
