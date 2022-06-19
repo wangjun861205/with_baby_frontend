@@ -1,10 +1,11 @@
 import { View, TextInput, Button, ScrollView, StyleSheet } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getLocation } from "../utils/location";
 import { getJWTToken } from "../utils/jwt";
 import { Upload } from "../components/upload";
 import { BASE_URL } from "@env";
+import { nearbyLocation } from "../apis/location";
 
 type CreateLocationRequest = {
 	name: string,
@@ -70,20 +71,59 @@ export const CreateLocation = () => {
 			description: v,
 		}))} />
 		<Upload setIDs={setImgs} />
-		<Button title="创建" onPress={() => {
+		<Button style={styles.button} title="创建" onPress={() => {
 			create().then(id => console.log(id)).catch(res => alert(res));
 		}} ></Button>
 
 	</ScrollView>
+}
+
+type Location =  {
+	name: string
+	latitude: number,
+	longitude: number,
+	description: string,
+	images: {
+		id: number,
+		fetch_code: string
+	}[]
+}
+
+export const LocationList = () => {
+	const [locs, setLocs] = useState<Location[]>([]);
+	const [limit, setLimit] = useState(10);
+	const [offset, setOffset] = useState(0);
+	useEffect(() => {
+		nearbyLocation(limit, offset).then(res => setLocs(res.list)).catch(reason => console.error(reason))
+	}, [limit, offset]);
+	return <View>
+		<ScrollView>
+			{
+				locs.map(l => (
+					<View>
+						<Text>{l.name}</Text>
+						<Text>{l.description}</Text>
+						<View>
+						</View>
+					</View>
+				))
+			}
+		</ScrollView>
+	</View>
+	
+
+	
 
 }
+
 
 const styles = StyleSheet.create({
 	"flex-grow": {
 		flexGrow: 1,
 	},
 	button: {
-		zIndex: 2,
-		position: "absolute",
+		display: "flex",
+		flexDirection: "column",
+		width: "100%",
 	}
 })

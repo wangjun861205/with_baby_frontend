@@ -1,6 +1,5 @@
 import * as FS from "expo-file-system";
-import { ViewProps, View, Image, TouchableOpacity, Text, StyleSheet } from "react-native";
-import useAsync from "../hooks/async";
+import { ViewProps, View, Image, TouchableOpacity, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { upload } from "../apis/upload";
 import { useEffect, useState } from "react";
 import { readAsStringAsync } from "expo-file-system";
@@ -19,43 +18,27 @@ type UploadState = {
 
 export const Upload = ({ setIDs }: UploadProps) => {
     const [states, setStates] = useState<UploadState[]>([]);
-    const doUpload = async (uri: string) => {
-        try {
-            const content = await readAsStringAsync(uri, { encoding: FS.EncodingType.Base64 });
-            const ids = await upload(content);
-            setStates(old => {
-                const i = old.findIndex(s => { s.uri == uri });
-                const l = [...old];
-                if (i === -1) {
-                    l.push({
-                        uri: uri,
-                        status: "Done",
-                        id: ids[0],
+    useEffect(() => {
+        setIDs(states.filter(s => s.status === "Done").map(s => s.id!));
+    }, [states]);
+
+    useEffect(() => {
+        states.filter(({status}) => status === "Uploading").forEach(({uri}) => {
+            readAsStringAsync(uri, { encoding: FS.EncodingType.Base64 }).then( content => {
+                upload(content).then(id => {
+                    setStates(old => {
+                        let next = [...old];
+                        next[next.findIndex(v => v.uri === uri)].status = "Done";
+                        next[next.findIndex(v => v.uri === uri)].id = id[0];
+                        return next;
                     });
-                } else {
-                    l[i].status = "Done";
-                    l[i].id = ids[0];
-                }
-                setIDs(l.filter(s => s.status === "Done").map(s => s.id!));
-                return l;
-            });
-        } catch (e) {
-            setStates(old => {
-                const i = old.findIndex(s => { s.uri == uri });
-                const l = [...old];
-                if (i === -1) {
-                    l.push({
-                        uri: uri,
-                        status: "Done",
-                        id: null,
-                    })
-                    return l
-                }
-                l[i].status = "Error";
-                l[i].id = null;
-                return l;
-            });
-        }
+                }).catch(reason => console.error(reason))
+            }).catch(reason => console.error(reason))
+        })
+    })
+
+    const doUpload = async (uri: string) => {
+        setStates(old => [...old, {uri: uri, status: "Uploading", id: null}]);
     }
 
     const pick = async () => {
@@ -78,17 +61,17 @@ export const Upload = ({ setIDs }: UploadProps) => {
         setStates(old => {
             const l = [...old];
             l[l.findIndex(v => v.uri === uri)].status = "Deleted";
-            setIDs(l.filter(v => v.status === "Done").map(v => v.id!));
             return l;
         });
     }
     return (
-        <View style={styles.button_container}>
+        <View style={styles.container}>
             <View style={styles.image_container}>
                 {
                     states.filter(img => img.status !== "Deleted").map(u => <View style={styles.preview} key={u.uri}>
                         <TouchableOpacity style={styles.delete_button} onPress={() => { del(u.uri) }}><Text>X</Text></TouchableOpacity>
-                        <Image style={styles.image} source={{ uri: u.uri }} />
+                        <Image style={styles.image} source={{ uri: u.uri }} blurRadius={u.status === "Uploading" ? 200 : 0}/>
+                        <ActivityIndicator style={ {position: "absolute", width: "100%", height: "100%"} } animating={u.status === "Uploading"} hidesWhenStopped={true} size="large" />
                     </View>)
                 }
             </View>
@@ -101,16 +84,18 @@ export const Upload = ({ setIDs }: UploadProps) => {
 }
 
 const styles = StyleSheet.create({
-    button_container: {
+    container: {
         flexWrap: "wrap",
         flexDirection: "row",
+    },
+    button_container: {
         width: "100%",
-        height: 200,
-        // height: "100%",
+        justifyContent: "space-around",
+        flexDirection: "row",
     },
     button: {
-        width: "20%",
-        height: "20%",
+        width: "30%",
+        alignItems: "center",
     },
     image_container: {
         flexWrap: "wrap",

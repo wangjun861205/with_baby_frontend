@@ -7,7 +7,6 @@ import { nearbyPlayings } from "../apis/playing";
 import { BASE_URL } from "../apis/urls";
 import { Playing } from "../apis/models";
 import AppLink from "react-native-app-link";
-import { ImagePreview } from "../components/image"
 import * as FS from "expo-file-system";
 
 
