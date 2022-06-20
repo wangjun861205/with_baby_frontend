@@ -2231,7 +2231,7 @@
   "resolved" "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz"
   "version" "1.0.2"
 
-"base-64@^0.1.0":
+"base-64@^0.1.0", "base-64@0.1.0":
   "integrity" "sha512-Y5gU45svrR5tI2Vt/X9GPd3L0HNIKzGu202EjxrXMpuc2V2CiKgemAbUUsqYmZJvPtCXoUKjNZwBJzsNScUbXA=="
   "resolved" "https://registry.npmjs.org/base-64/-/base-64-0.1.0.tgz"
   "version" "0.1.0"
@@ -5719,6 +5719,14 @@
   "integrity" "sha512-usPcJMZMVvRs/lBSy/UU+ooB+h2YhMXGA47xvWVltyOQerQu4hKSWG+qG2BRKcpHmTkmFynDSf5cLWztXwAA1w=="
   "resolved" "https://registry.npmjs.org/react-native-app-link/-/react-native-app-link-1.0.1.tgz"
   "version" "1.0.1"
+
+"react-native-blob-util@^0.16.0":
+  "integrity" "sha512-Ouyvw3ObMikEK5c2BW5WvcAsLmED7GuSm6CDmTPse0qTn43H3O8XL3kZEmrf2A4w1QoSvhy8v0IuADm/kaLTcg=="
+  "resolved" "https://registry.npmjs.org/react-native-blob-util/-/react-native-blob-util-0.16.0.tgz"
+  "version" "0.16.0"
+  dependencies:
+    "base-64" "0.1.0"
+    "glob" "^7.1.6"
 
 "react-native-codegen@^0.0.17":
   "integrity" "sha512-7GIEUmAemH9uWwB6iYXNNsPoPgH06pxzGRmdBzK98TgFBdYJZ7CBuZFPMe4jmHQTPOkQazKZ/w5O6/71JBixmw=="
