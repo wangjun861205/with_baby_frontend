@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { readAsStringAsync } from "expo-file-system";
 import * as Picker from "expo-image-picker";
 import React from "react";
+import { getJWTToken } from "../utils/jwt";
 
 export interface UploadProps extends ViewProps {
     setIDs: (value: React.SetStateAction<number[]>) => void
@@ -12,7 +13,7 @@ export interface UploadProps extends ViewProps {
 
 type UploadState = {
     uri: string,
-    status: "Uploading" | "Error" | "Done" | "Deleted"
+    status: "Ready" | "Uploading" | "Error" | "Done"
     id: number | null,
 }
 
@@ -23,22 +24,28 @@ export const Upload = ({ setIDs }: UploadProps) => {
     }, [states]);
 
     useEffect(() => {
-        states.filter(({status}) => status === "Uploading").forEach(({uri}) => {
-            readAsStringAsync(uri, { encoding: FS.EncodingType.Base64 }).then( content => {
-                upload(content).then(id => {
+        getJWTToken().then(token => {
+            states.filter(({ status }) => status === "Ready").forEach(({ uri }, i) => {
+                states[i].status = "Uploading";
+                upload(uri, token).then(id => {
                     setStates(old => {
-                        let next = [...old];
-                        next[next.findIndex(v => v.uri === uri)].status = "Done";
-                        next[next.findIndex(v => v.uri === uri)].id = id[0];
-                        return next;
+                        const l = [...old];
+                        const u = l.find(v => v.uri === uri);
+                        if (u) {
+                            u.status = "Done";
+                            u.id = id;
+                        }
+                        return l;
                     });
                 }).catch(reason => console.error(reason))
-            }).catch(reason => console.error(reason))
+            })
+        }).catch(reason => {
+            console.error(reason);
         })
     })
 
     const doUpload = async (uri: string) => {
-        setStates(old => [...old, {uri: uri, status: "Uploading", id: null}]);
+        setStates(old => [...old, { uri: uri, status: "Ready", id: null }]);
     }
 
     const pick = async () => {
@@ -58,11 +65,7 @@ export const Upload = ({ setIDs }: UploadProps) => {
         }
     }
     const del = (uri: string) => {
-        setStates(old => {
-            const l = [...old];
-            l[l.findIndex(v => v.uri === uri)].status = "Deleted";
-            return l;
-        });
+        setStates(old => old.filter(u => u.uri !== uri));
     }
     return (
         <View style={styles.container}>
@@ -70,8 +73,8 @@ export const Upload = ({ setIDs }: UploadProps) => {
                 {
                     states.filter(img => img.status !== "Deleted").map(u => <View style={styles.preview} key={u.uri}>
                         <TouchableOpacity style={styles.delete_button} onPress={() => { del(u.uri) }}><Text>X</Text></TouchableOpacity>
-                        <Image style={styles.image} source={{ uri: u.uri }} blurRadius={u.status === "Uploading" ? 200 : 0}/>
-                        <ActivityIndicator style={ {position: "absolute", width: "100%", height: "100%"} } animating={u.status === "Uploading"} hidesWhenStopped={true} size="large" />
+                        <Image style={styles.image} source={{ uri: u.uri }} blurRadius={u.status === "Uploading" || u.status === "Ready" ? 200 : 0} />
+                        <ActivityIndicator style={{ position: "absolute", width: "100%", height: "100%" }} animating={u.status === "Uploading"} hidesWhenStopped={true} size="large" />
                     </View>)
                 }
             </View>
