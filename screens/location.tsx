@@ -1,4 +1,4 @@
-import { View, TextInput, Button, ScrollView, StyleSheet } from "react-native";
+import { View, Image, TextInput, Button, ScrollView, StyleSheet, Text } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useEffect, useState } from "react";
 import { getLocation } from "../utils/location";
@@ -79,6 +79,7 @@ export const CreateLocation = () => {
 }
 
 type Location =  {
+	id: number,
 	name: string
 	latitude: number,
 	longitude: number,
@@ -94,25 +95,28 @@ export const LocationList = () => {
 	const [limit, setLimit] = useState(10);
 	const [offset, setOffset] = useState(0);
 	useEffect(() => {
-		nearbyLocation(limit, offset).then(res => setLocs(res.list)).catch(reason => console.error(reason))
+		nearbyLocation(limit, offset).then(res => { console.log(res.list); setLocs(res.list); }).catch(reason => console.error(reason))
 	}, [limit, offset]);
 	return <View>
 		<ScrollView>
 			{
 				locs.map(l => (
-					<View>
+					<View key={l.id}>
 						<Text>{l.name}</Text>
 						<Text>{l.description}</Text>
+						<Text>{l.latitude}</Text>
+						<Text>{l.longitude}</Text>
+						<Image style={{ width: 100, height: 100, resizeMode: "cover"}} source={{uri: 'http://192.168.3.11:8000/api/upload/94'}}/>
 						<View>
+							{
+								l.images.map(img => (<Image style={{width: 100, height: 100}}source={{uri: BASE_URL + `/api/upload/${img.id}`}} />))
+							}
 						</View>
 					</View>
 				))
 			}
 		</ScrollView>
 	</View>
-	
-
-	
 
 }
 

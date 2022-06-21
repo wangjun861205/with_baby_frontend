@@ -6,7 +6,7 @@ import * as Location from "expo-location";
 const Home = ({ navigation }: { navigation: any }) => {
     return <View>
         <TouchableOpacity onPress={() => {
-            navigation.navigate("PlayingList");
+            navigation.navigate("LocationList");
         }} style={[styles.textContainer, styles.yellow]} >
             <Text style={styles.text}>玩</Text>
         </TouchableOpacity>
