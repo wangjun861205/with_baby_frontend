@@ -94,29 +94,36 @@ export const LocationList = () => {
 	const [locs, setLocs] = useState<Location[]>([]);
 	const [limit, setLimit] = useState(10);
 	const [offset, setOffset] = useState(0);
+	const [token, setToken] = useState<string>("");
+	let isMounted = true;
 	useEffect(() => {
-		nearbyLocation(limit, offset).then(res => { console.log(res.list); setLocs(res.list); }).catch(reason => console.error(reason))
+		getJWTToken().then(t => {
+			setToken(t);
+			console.log(token);
+			nearbyLocation(limit, offset).then(res => {  console.log(res.list); if (isMounted) {setLocs(res.list);} }).catch(reason => console.error(reason));
+		});
+		return () => {
+			isMounted = false;
+		}
 	}, [limit, offset]);
 	return <View>
-		<ScrollView>
-			{
-				locs.map(l => (
-					<View key={l.id}>
-						<Text>{l.name}</Text>
-						<Text>{l.description}</Text>
-						<Text>{l.latitude}</Text>
-						<Text>{l.longitude}</Text>
-						<Image style={{ width: 100, height: 100, resizeMode: "cover"}} source={{uri: 'http://192.168.3.11:8000/api/upload/94'}}/>
-						<View>
-							{
-								l.images.map(img => (<Image style={{width: 100, height: 100}}source={{uri: BASE_URL + `/api/upload/${img.id}`}} />))
-							}
-						</View>
-					</View>
-				))
-			}
-		</ScrollView>
-	</View>
+				<ScrollView>
+					{
+						locs.map(l => 
+						<View key={l.id}>
+							<Text>{l.name}</Text>
+							<Text>{l.description}</Text>
+							<Text>{l.latitude}</Text>
+							<Text>{l.longitude}</Text>
+							<View>
+								{
+									l.images.map(img => (<Image key={img.id} style={{width: 100, height: 100}} source={{uri: BASE_URL + `/api/upload/${img.id}`, headers: {JWT_TOKEN: token}}} />))
+								}
+							</View>
+						</View>)
+					}
+				</ScrollView>
+		</View>
 
 }
 
