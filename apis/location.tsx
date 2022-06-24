@@ -21,3 +21,13 @@ export const nearbyLocation = async (limit: number, offset: number) => {
     }
     return Promise.resolve(res.json())
 }
+
+export const detail = async (id: number) => {
+    const token = await getJWTToken();
+    const loc = await getLocation();
+    const params = new URLSearchParams();
+    params.append("latitude", loc.coords.latitude.toString());
+    params.append("longitude", loc.coords.longitude.toString());
+    return (await fetch(BASE_URL + `/api/locations/${id}?${params}`, { headers: { JWT_TOKEN: token } })).json();
+
+}

@@ -8,6 +8,7 @@ import React from "react";
 import { getJWTToken } from "../utils/jwt";
 
 export interface UploadProps extends ViewProps {
+    ids: number[],
     setIDs: (value: React.SetStateAction<number[]>) => void
 }
 
@@ -17,8 +18,8 @@ type UploadState = {
     id: number | null,
 }
 
-export const Upload = ({ setIDs }: UploadProps) => {
-    const [states, setStates] = useState<UploadState[]>([]);
+export const Upload = ({ ids, setIDs }: UploadProps) => {
+    const [states, setStates] = useState<UploadState[]>(ids.map(id => ({ uri: "", status: "Done", id: id })));
     useEffect(() => {
         setIDs(states.filter(s => s.status === "Done").map(s => s.id!));
     }, [states]);
