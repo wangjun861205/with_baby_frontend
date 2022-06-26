@@ -1,11 +1,16 @@
-import { View, Image, TextInput, Button, ScrollView, StyleSheet, Text, ViewProps, ActivityIndicator } from "react-native";
+import { View, Image, TextInput, Button, ScrollView, StyleSheet, Text, ViewProps, ActivityIndicator, TouchableOpacity, NativeSyntheticEvent } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useEffect, useState } from "react";
 import { getLocation } from "../utils/location";
 import { getJWTToken } from "../utils/jwt";
 import { Upload } from "../components/upload";
 import { BASE_URL } from "@env";
-import { nearbyLocation, detail } from "../apis/location";
+import { nearbyLocation, detail, update } from "../apis/location";
+import { WithNavigation } from "../components/navigation";
+import { useIsFocused } from "@react-navigation/native"
+import { useToken } from "../hooks/token";
+import { MyImage } from "../components/image";
+
 
 type CreateLocationRequest = {
 	name: string,
@@ -86,6 +91,7 @@ export const CreateLocation = ({ navigation }: CreateLocationProps) => {
 type Location = {
 	id: number,
 	name: string
+	category: number,
 	latitude: number,
 	longitude: number,
 	description: string,
@@ -101,50 +107,53 @@ interface LocationListProps extends ViewProps {
 
 
 
+
 export const LocationList = ({ navigation }: LocationListProps) => {
 	const [locs, setLocs] = useState<Location[]>([]);
 	const [limit, setLimit] = useState(10);
 	const [offset, setOffset] = useState(0);
 	const [token, setToken] = useState<string>("");
+	const isFocuse = useIsFocused();
 	let isMounted = true;
 	useEffect(() => {
 		getJWTToken().then(t => {
 			setToken(t);
-			console.log(token);
-			nearbyLocation(limit, offset).then(res => { console.log(res.list); if (isMounted) { setLocs(res.list); } }).catch(reason => console.error(reason));
+			nearbyLocation(limit, offset).then(res => {  if (isMounted) { setLocs(res.list); } }).catch(reason => console.error(reason));
 		});
 		return () => {
 			isMounted = false;
 		}
-	}, [limit, offset]);
-	return <View>
-		<ScrollView>
+	}, [limit, offset, isFocuse]);
+	return <WithNavigation current="locations" navigation={navigation}>
+		<View>
 			{
 				locs.map(l =>
-					<View key={l.id}>
-						<Text>{l.name}</Text>
-						<Text>{l.description}</Text>
-						<Text>{l.latitude}</Text>
-						<Text>{l.longitude}</Text>
-						<View>
-							{
-								l.images.map(img => (<Image key={img.id} style={{ width: 100, height: 100 }} source={{ uri: BASE_URL + `/api/upload/${img.id}`, headers: { JWT_TOKEN: token } }} />))
-							}
+					<TouchableOpacity key={l.id} onPress={() => {navigation.navigate("LocationDetail", {"id": l.id})}}>
+						<View key={l.id}>
+							<View style={styles.row}>
+								<Text>{l.name}</Text>
+								<Text>{l.description}</Text>
+								{
+									l.images.map(img => (<Image key={img.id} style={{ width: 100, height: 100 }} source={{ uri: BASE_URL + `/api/upload/${img.id}`, headers: { JWT_TOKEN: token } }} />))
+								}
+							</View>
+							<View style={styles.row}>
+								<Button title="编辑" onPress={() => { navigation.navigate("EditLocation", { id: l.id }) }} />
+								<Button title="添加回忆" onPress={() => { navigation.navigate("CreateMemory", { locationID: l.id }) }} />
+								<Button title="回忆" onPress={() => { navigation.navigate("MemoryList", { locationID: l.id }) }} />
+							</View>
 						</View>
-						<Button title="编辑" onPress={() => { navigation.navigate("EditLocation", { id: l.id }) }} />
-					</View>)
+					</TouchableOpacity>)
 			}
-		</ScrollView>
-	</View>
-
+		</View>
+	</WithNavigation>
 }
 
 type EditLocationState = {
-	id: number,
 	name: string,
 	category: number,
 	description: string,
-	images: { id: number }[]
+	images: {id: number}[],
 }
 
 interface EditLocationProps extends ViewProps {
@@ -152,32 +161,88 @@ interface EditLocationProps extends ViewProps {
 	route: any,
 }
 
-export const EditLocation = ({ route }: EditLocationProps) => {
-	const [isLoading, setIsLoading] = useState(true);
-	const [data, setData] = useState<EditLocationState | null>(null);
+export const EditLocation = ({ navigation, route }: EditLocationProps) => {
+	const [data, setData] = useState<EditLocationState>();
 	const [images, setImages] = useState<number[]>([]);
+	const [token, setToken] = useState<string>();
 	let isMounted = true;
 	useEffect(() => {
-		detail(route.params.id).then(res => { if (isMounted) { setData(res); setIsLoading(false); } }).catch(e => console.error(e));
+		getJWTToken().then(v => { if (isMounted) { setToken(v) }}) .catch(e => console.error(e));
+	}, [])
+	useEffect(() => {
+		const ids = data ? data.images.map((v: {id: number}) => v.id) : [];
+		if (isMounted) {
+			setImages(ids);
+		}
+	}, [data])
+	useEffect(() => {
+		detail(route.params.id).then(res => { 
+			if (isMounted) { 
+				setData(res); 
+			} 
+		}).catch(e => console.error(e));
 		return () => {
 			isMounted = false;
 		}
 	}, [])
-	return isLoading ? <ActivityIndicator animating={true} size="large" hidesWhenStopped={true} /> : <View>
-		<ScrollView keyboardShouldPersistTaps="handled">
-			<TextInput placeholder="名称" value={data?.name} />
-			<Picker selectedValue={data?.category} onValueChange={(v) => {
-				setData(old => ({ ...old!, category: v }));
-			}} >
-				<Picker.Item value={1} label="吃" />
-				<Picker.Item value={2} label="玩" />
-				<Picker.Item value={4} label="吃 + 玩" />
-			</Picker>
-			<TextInput placeholder="描述" value={data?.description} onChangeText={v => setData(old => ({ ...old!, description: v }))} />
-			<Upload ids={images} setIDs={setImages} />
-		</ScrollView>
-	</View >
+	return <WithNavigation current="locations" navigation={navigation}>
+		{
+			!data ? <View style={styles.indicator}><ActivityIndicator  animating={true} size="large" hidesWhenStopped={true} /></View>: <View>
+				<ScrollView keyboardShouldPersistTaps="handled">
+					<TextInput placeholder="名称" value={data.name} onChangeText={(v) => setData(old => ({...old!, name: v}))}/>
+					<Picker selectedValue={data.category} onValueChange={(v) => {
+						setData(old => ({ ...old!, category: v }));
+					}} >
+						<Picker.Item value={1} label="吃" />
+						<Picker.Item value={2} label="玩" />
+						<Picker.Item value={4} label="吃 + 玩" />
+					</Picker>
+					<TextInput placeholder="描述" value={data.description} onChangeText={v => setData(old => ({ ...old!, description: v }))} />
+					{ token && images ? <Upload ids={images} setIDs={setImages} headers={{"JWT_TOKEN": token}}/> : <></> }
+					<Button title="修改" disabled={!data} onPress={() => {
+						const body = {
+							name: data!.name, 
+							category: data!.category,
+							description: data!.description,
+							images: images};
+						update(route.params.id, body);}} />
+				</ScrollView>
+			</View >
+		}
+	</WithNavigation>
 }
+
+interface DetailProps extends ViewProps {
+	navigation: any,
+	route: any,
+}
+
+export const Detail = ({navigation, route}: DetailProps) => {
+	const token = useToken();
+	const [data, setData] = useState<Location>();
+	const [status, setStatus] = useState<"Loading"| "Complete"| "Error">("Loading");
+	let isMounted = true;
+
+
+	useEffect(() => {
+		detail(route.params.id).then(res => { if (isMounted) { setData(res); setStatus("Complete") }}).catch(e => { setStatus("Error"); console.error(e)});
+		return () => {
+			isMounted = false;
+		}
+	}, []);
+
+	return status === "Loading" ? <ActivityIndicator animating={true} /> : 
+		status === "Error" ? <TouchableOpacity onPress={() => {setStatus("Loading")}}><View><Text>获取数据失败， 点击重试</Text></View></TouchableOpacity>:
+		<WithNavigation current="locations" navigation={navigation}>
+			<Text>{data?.name}</Text>
+			<Text>{data?.description}</Text>
+			<Text>{ data?.category === 1 ? "吃" : data?.category === 2 ? "玩" : "吃 + 玩" }</Text>
+			{
+				data?.images.map(img => <MyImage key={img.id} id={img.id} width="100%" height={300}/>)
+			}
+		</WithNavigation>
+}
+
 
 
 const styles = StyleSheet.create({
@@ -188,5 +253,19 @@ const styles = StyleSheet.create({
 		display: "flex",
 		flexDirection: "column",
 		width: "100%",
-	}
+	},
+	row: {
+		flexWrap: "wrap",
+		flexDirection: "row",
+		width: "100%",
+		justifyContent: "space-between",
+		alignItems: "center",
+	},
+	indicator: {
+		position: "absolute",
+		top: 200,
+		width: "100%"
+	},
+
 })
+

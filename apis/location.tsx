@@ -31,3 +31,23 @@ export const detail = async (id: number) => {
     return (await fetch(BASE_URL + `/api/locations/${id}?${params}`, { headers: { JWT_TOKEN: token } })).json();
 
 }
+
+type Update = {
+    name: string,
+    category: number,
+    description: string,
+    images: number[],
+}
+
+export const update = async (id: number, upd: Update) => {
+    const token = await getJWTToken();
+    const res = await fetch(BASE_URL + `/api/locations/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            JWT_TOKEN: token,
+        },
+        body: JSON.stringify(upd),
+    });
+    return res.json();
+}

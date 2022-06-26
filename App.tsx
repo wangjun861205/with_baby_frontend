@@ -9,7 +9,9 @@ import { PlayingList, PlayingCreate } from "./screens/playing"
 import * as Location from "expo-location";
 import { Photo } from "./screens/photo";
 import { EatingCreate } from './screens/eating';
-import { CreateLocation, LocationList, EditLocation } from './screens/location';
+import { CreateLocation, LocationList, EditLocation, Detail as LocationDetail } from './screens/location';
+import { Create as CreateMemory, List as MemoryList} from './screens/memory'; 
+
 
 
 
@@ -19,7 +21,7 @@ export default function App() {
   Location.requestForegroundPermissionsAsync().then(res => { console.log(res) }).catch(err => alert(err));
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName='Home'>
+      <Stack.Navigator initialRouteName='LocationList' screenOptions={{headerShown: false, animation: 'none'}}>
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Signin" component={Signin} />
         <Stack.Screen name="Profile" component={Profile} />
@@ -28,8 +30,11 @@ export default function App() {
         <Stack.Screen name="Photo" component={Photo} />
         <Stack.Screen name="EatingCreate" component={EatingCreate} />
         <Stack.Screen name="CreateLocation" component={CreateLocation} />
-        <Stack.Screen name="LocationList" component={LocationList} />
+        <Stack.Screen name="LocationList" component={LocationList}/>
         <Stack.Screen name="EditLocation" component={EditLocation} />
+        <Stack.Screen name="LocationDetail" component={LocationDetail} />
+        <Stack.Screen name="CreateMemory" component={CreateMemory} />
+        <Stack.Screen name="MemoryList" component={MemoryList} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -11,14 +11,12 @@ interface File {
     type: string,
 }
 
-export const upload = async (uri: string, token: string): Promise<number> => {
+export const upload = async (uri: string, headers?: {[key: string]: string}): Promise<number> => {
     const data = new FormData();
     data.append("file", {uri, name: "temp", type: "image/png"} as any);
     const res = await fetch(BASE_URL + "/api/upload", {
         method: "POST",
-        headers: {
-            JWT_TOKEN: token,
-        },
+        headers: headers,
         body: data,
     });
     return Promise.resolve((await res.json())[0]);
