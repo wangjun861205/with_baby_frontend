@@ -21,7 +21,7 @@ export default function App() {
   Location.requestForegroundPermissionsAsync().then(res => { console.log(res) }).catch(err => alert(err));
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName='LocationList' screenOptions={{headerShown: false, animation: 'none'}}>
+      <Stack.Navigator initialRouteName='Signin' screenOptions={{headerShown: false, animation: 'none'}}>
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Signin" component={Signin} />
         <Stack.Screen name="Profile" component={Profile} />

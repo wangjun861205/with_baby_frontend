@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { TextInput, View, StyleSheet, Button } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import Config from "react-native-config";
+import {BASE_URL} from "@env";
+
 
 const Signin = ({ navigation }: { navigation: any }) => {
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
 
     const signin = () => {
-        fetch(`${Config.BASE_URL}/users/signin`, {
+        fetch(`${BASE_URL}/user/signin`, {
             method: 'POST',
             headers: {
                 Accept: 'application/json',
@@ -18,7 +19,7 @@ const Signin = ({ navigation }: { navigation: any }) => {
                 phone: phone,
                 password: password
             })
-        }).then(res => res.text().then(s => SecureStore.setItemAsync("JWT_TOKEN", s).then(navigation.navigate("Home")))).catch(err => alert(err));
+        }).then(res => res.text().then(s => SecureStore.setItemAsync("JWT_TOKEN", s).then(navigation.navigate("LocationList")))).catch(err => console.error(err));
     }
     return <View>
         <TextInput style={styles.phone} placeholder="Phone..." onChangeText={setPhone} />

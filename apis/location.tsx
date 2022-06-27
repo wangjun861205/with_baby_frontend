@@ -10,7 +10,6 @@ export const nearbyLocation = async (limit: number, offset: number) => {
     params.append("longitude", loc.coords.longitude.toString());
     params.append("limit", limit.toString());
     params.append("offset", offset.toString());
-    console.log(BASE_URL + "/api/locations?" + params);
     const res = await fetch(BASE_URL + "/api/locations?" + params, {
         headers: {
             JWT_TOKEN: token

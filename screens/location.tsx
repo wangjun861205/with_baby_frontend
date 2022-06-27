@@ -88,18 +88,31 @@ export const CreateLocation = ({ navigation }: CreateLocationProps) => {
 }
 
 
-type Location = {
+type Location = [
+	{
 	id: number,
 	name: string
 	category: number,
 	latitude: number,
 	longitude: number,
 	description: string,
-	images: {
+	},
+	{
+		id: number,
+		name: string,
+	},
+	{
+		id: number,
+		name: string,
+		is_required: boolean,
+		usage: string,
+	}[],
+	{
 		id: number,
 		fetch_code: string
-	}[]
-}
+	}[],
+	number[]
+]
 
 interface LocationListProps extends ViewProps {
 	navigation: any
@@ -128,19 +141,21 @@ export const LocationList = ({ navigation }: LocationListProps) => {
 		<View>
 			{
 				locs.map(l =>
-					<TouchableOpacity key={l.id} onPress={() => {navigation.navigate("LocationDetail", {"id": l.id})}}>
-						<View key={l.id}>
+					<TouchableOpacity key={l[0].id} onPress={() => {navigation.navigate("LocationDetail", {"id": l[0].id})}}>
+						<View>
 							<View style={styles.row}>
-								<Text>{l.name}</Text>
-								<Text>{l.description}</Text>
+								<Text>{l[0].name}</Text>
+								<Text>{l[0].description}</Text>
+								<Text>由{l[1].name}发现</Text>
+								<Text>距离:{l[4]}</Text>
 								{
-									l.images.map(img => (<Image key={img.id} style={{ width: 100, height: 100 }} source={{ uri: BASE_URL + `/api/upload/${img.id}`, headers: { JWT_TOKEN: token } }} />))
+									l[3].map(img => (<Image key={img.id} style={{ width: 100, height: 100 }} source={{ uri: BASE_URL + `/api/upload/${img.id}`, headers: { JWT_TOKEN: token } }} />))
 								}
 							</View>
 							<View style={styles.row}>
-								<Button title="编辑" onPress={() => { navigation.navigate("EditLocation", { id: l.id }) }} />
-								<Button title="添加回忆" onPress={() => { navigation.navigate("CreateMemory", { locationID: l.id }) }} />
-								<Button title="回忆" onPress={() => { navigation.navigate("MemoryList", { locationID: l.id }) }} />
+								<Button title="编辑" onPress={() => { navigation.navigate("EditLocation", { id: l[0].id }) }} />
+								<Button title="添加回忆" onPress={() => { navigation.navigate("CreateMemory", { locationID: l[0].id }) }} />
+								<Button title="回忆" onPress={() => { navigation.navigate("MemoryList", { locationID: l[0].id }) }} />
 							</View>
 						</View>
 					</TouchableOpacity>)
