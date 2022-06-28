@@ -1,8 +1,8 @@
-import {View, TextInput, ScrollView, ViewProps, Button, Text, Image, StyleSheet} from "react-native";
+import {View, TextInput, ScrollView, ViewProps, Button, Text, Image, StyleSheet, ActivityIndicator} from "react-native";
 import { useEffect, useState } from "react";
 import { Upload } from "../components/upload";
-import { useLocation } from "../hooks/location";
-import { useToken } from "../hooks/token";
+import { useCoords } from "../hooks/location";
+import { useProfile } from "../hooks/profile";
 import { BASE_URL } from "@env";
 import { WithNavigation } from "../components/navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,14 +17,14 @@ export const Create = ({navigation, route}: {navigation: any, route: any}) => {
     const [title, setTitle] = useState<string>("");
     const [content, setContent] = useState<string>("");
     const [imgs, setImgs] = useState<number[]>([]);
-    const token = useToken();
+    const profile = useProfile();
 
-    const create = () => {
+    const create = (token: string) => {
         fetch(BASE_URL + `/api/locations/${route.params.locationID}/memories`, {
             method: "POST",
             headers:  {
                 "Content-Type": "application/json",
-                JWT_TOKEN: token!,
+                JWT_TOKEN: token,
             },
             body: JSON.stringify({
                 title: title,
@@ -34,11 +34,11 @@ export const Create = ({navigation, route}: {navigation: any, route: any}) => {
         }).then(res => { if (res.status !== 200) throw new Error(`failed to create memory(staus: ${res.status})`) }).catch(e => console.error(e));
     }
 
-    return <WithNavigation current="memories">
+    return !profile ? <ActivityIndicator animating={true} /> : <WithNavigation current="memories" navigation={navigation} username={profile.name} avatar={profile.avatar} token={profile.token}>
             <TextInput placeholder="Title" onChangeText={v => setTitle(v)} />
             <TextInput placeholder="Content" multiline={true} numberOfLines={10} onChangeText={v => setContent(v)}/>
-            { token ? <Upload ids={imgs} setIDs={setImgs} headers={{JWT_TOKEN: token}}/> : <></> }
-            <Button title="创建" onPress={create}/>
+            <Upload ids={imgs} setIDs={setImgs} headers={{JWT_TOKEN: profile.token}} />
+            <Button title="创建" onPress={() => create(profile.token)}/>
         </WithNavigation>
 }
 
@@ -55,9 +55,17 @@ export const List = ({navigation, route}: {navigation: any, route: any}) => {
     const [total, setTotal] = useState<number>(0);
     const [limit, setLimit] = useState<number>(10);
     const [offset, setOffset] = useState<number>(0);
+    const profile = useProfile();
     let isMounted = true;
     useEffect(() => {
-        list(route.params.locationID, {limit: limit, offset: offset}).then(
+        if (profile === null) {
+            navigation.navigate("Signin", {from: "MemoryList"});
+            return
+        }
+        if (!profile) {
+            return
+        }
+        list(route.params.locationID, profile.token, {limit: limit, offset: offset}).then(
             res => {
                 if (isMounted) {
                     setData(res.list);
@@ -68,7 +76,9 @@ export const List = ({navigation, route}: {navigation: any, route: any}) => {
         return () => { isMounted = false };
     }, [])
 
-    return <WithNavigation current="memories" navigation={navigation}>
+    return !data || !profile 
+    ? <ActivityIndicator animating={true} />
+    : <WithNavigation current="memories" navigation={navigation} username={profile.name} token={profile.token} avatar={profile.avatar}>
         {
             data.map(m => (<View style={styles.row} key={m[0].id}>
                 <Text>{m[0].title}</Text>

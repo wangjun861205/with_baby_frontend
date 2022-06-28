@@ -4,7 +4,7 @@ import * as SecureStore from "expo-secure-store";
 import {BASE_URL} from "@env";
 
 
-const Signin = ({ navigation }: { navigation: any }) => {
+const Signin = ({ navigation, route }: { navigation: any, route: any }) => {
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
 
@@ -19,7 +19,7 @@ const Signin = ({ navigation }: { navigation: any }) => {
                 phone: phone,
                 password: password
             })
-        }).then(res => res.text().then(s => SecureStore.setItemAsync("JWT_TOKEN", s).then(navigation.navigate("LocationList")))).catch(err => console.error(err));
+        }).then(res => res.text().then(s => { SecureStore.setItemAsync("PROFILE", s ).then(() => {navigation.navigate(route.params.from);})})).catch(err => console.error(err));
     }
     return <View>
         <TextInput style={styles.phone} placeholder="Phone..." onChangeText={setPhone} />

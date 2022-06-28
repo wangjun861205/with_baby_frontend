@@ -9,7 +9,7 @@ import { PlayingList, PlayingCreate } from "./screens/playing"
 import * as Location from "expo-location";
 import { Photo } from "./screens/photo";
 import { EatingCreate } from './screens/eating';
-import { CreateLocation, LocationList, EditLocation, Detail as LocationDetail } from './screens/location';
+import { CreateLocation, LocationList, Edit as EditLocation, Detail as LocationDetail } from './screens/location';
 import { Create as CreateMemory, List as MemoryList} from './screens/memory'; 
 
 
@@ -21,7 +21,7 @@ export default function App() {
   Location.requestForegroundPermissionsAsync().then(res => { console.log(res) }).catch(err => alert(err));
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName='Signin' screenOptions={{headerShown: false, animation: 'none'}}>
+      <Stack.Navigator initialRouteName='LocationList' screenOptions={{headerShown: false, animation: 'none'}}>
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Signin" component={Signin} />
         <Stack.Screen name="Profile" component={Profile} />

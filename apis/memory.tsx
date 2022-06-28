@@ -7,12 +7,11 @@ type ListParams = {
     offset: number,
 }
 
-export const list = async (location: number, params: ListParams) => {
+export const list = async (location: number, token: string, params: ListParams) => {
     const p = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) {
         p.append(k, `${v}`);
     }
-    const token = await getJWTToken();
     const res = await fetch(BASE_URL + `/api/locations/${location}/memories?${p}`, {
         headers: {
             JWT_TOKEN: token,

@@ -8,8 +8,10 @@ import { BASE_URL } from "@env";
 import { nearbyLocation, detail, update } from "../apis/location";
 import { WithNavigation } from "../components/navigation";
 import { useIsFocused } from "@react-navigation/native"
-import { useToken } from "../hooks/token";
 import { MyImage } from "../components/image";
+import { useCoords } from "../hooks/location";
+import { useProfile } from "../hooks/profile"
+
 
 
 type CreateLocationRequest = {
@@ -105,7 +107,7 @@ type Location = [
 		id: number,
 		name: string,
 		is_required: boolean,
-		usage: string,
+		usage: string
 	}[],
 	{
 		id: number,
@@ -125,19 +127,25 @@ export const LocationList = ({ navigation }: LocationListProps) => {
 	const [locs, setLocs] = useState<Location[]>([]);
 	const [limit, setLimit] = useState(10);
 	const [offset, setOffset] = useState(0);
-	const [token, setToken] = useState<string>("");
+	const coords = useCoords();
+	const profile = useProfile();
 	const isFocuse = useIsFocused();
 	let isMounted = true;
 	useEffect(() => {
-		getJWTToken().then(t => {
-			setToken(t);
-			nearbyLocation(limit, offset).then(res => {  if (isMounted) { setLocs(res.list); } }).catch(reason => console.error(reason));
-		});
+		if (profile === null) {
+			navigation.navigate("Signin", {from: "LocationList"});
+			return;
+		}
+		if (!profile || !coords) {
+			return;
+		}
+		nearbyLocation(profile.token, coords.latitude, coords.longitude, limit, offset).then(res => {  if (isMounted) { setLocs(res.list); } }).catch(reason => console.error(reason));
 		return () => {
 			isMounted = false;
 		}
-	}, [limit, offset, isFocuse]);
-	return <WithNavigation current="locations" navigation={navigation}>
+	}, [limit, offset, isFocuse, profile, coords]);
+	return !coords || !profile || !locs ?  <ActivityIndicator animating={true} /> :
+		<WithNavigation current="locations" navigation={navigation} token={profile.token} username={profile.name} avatar={profile.avatar}>
 		<View>
 			{
 				locs.map(l =>
@@ -149,7 +157,7 @@ export const LocationList = ({ navigation }: LocationListProps) => {
 								<Text>由{l[1].name}发现</Text>
 								<Text>距离:{l[4]}</Text>
 								{
-									l[3].map(img => (<Image key={img.id} style={{ width: 100, height: 100 }} source={{ uri: BASE_URL + `/api/upload/${img.id}`, headers: { JWT_TOKEN: token } }} />))
+									l[3].map(img => (<Image key={img.id} style={{ width: 100, height: 100 }} source={{ uri: BASE_URL + `/api/upload/${img.id}`, headers: { JWT_TOKEN: profile.token } }} />))
 								}
 							</View>
 							<View style={styles.row}>
@@ -164,34 +172,34 @@ export const LocationList = ({ navigation }: LocationListProps) => {
 	</WithNavigation>
 }
 
-type EditLocationState = {
-	name: string,
-	category: number,
-	description: string,
-	images: {id: number}[],
-}
 
 interface EditLocationProps extends ViewProps {
 	navigation: any,
 	route: any,
 }
 
-export const EditLocation = ({ navigation, route }: EditLocationProps) => {
-	const [data, setData] = useState<EditLocationState>();
+export const Edit = ({ navigation, route }: EditLocationProps) => {
+	const [data, setData] = useState<Location>();
 	const [images, setImages] = useState<number[]>([]);
-	const [token, setToken] = useState<string>();
+	const token = useToken();
+	const coords = useCoords();
 	let isMounted = true;
 	useEffect(() => {
-		getJWTToken().then(v => { if (isMounted) { setToken(v) }}) .catch(e => console.error(e));
-	}, [])
-	useEffect(() => {
-		const ids = data ? data.images.map((v: {id: number}) => v.id) : [];
+		const ids = data ? data[3].map((v: {id: number}) => v.id) : [];
+		console.log(ids);
 		if (isMounted) {
 			setImages(ids);
 		}
 	}, [data])
 	useEffect(() => {
-		detail(route.params.id).then(res => { 
+		if (token === null) {
+			navigation.navigate("Signin", {from: "EditLocation"});
+			return
+		}
+		if (!token || !coords) {
+			return
+		}
+		detail(route.params.id, token, coords?.latitude, coords.longitude).then(res => { 
 			if (isMounted) { 
 				setData(res); 
 			} 
@@ -199,26 +207,26 @@ export const EditLocation = ({ navigation, route }: EditLocationProps) => {
 		return () => {
 			isMounted = false;
 		}
-	}, [])
+	}, [token, coords])
 	return <WithNavigation current="locations" navigation={navigation}>
 		{
 			!data ? <View style={styles.indicator}><ActivityIndicator  animating={true} size="large" hidesWhenStopped={true} /></View>: <View>
 				<ScrollView keyboardShouldPersistTaps="handled">
-					<TextInput placeholder="名称" value={data.name} onChangeText={(v) => setData(old => ({...old!, name: v}))}/>
-					<Picker selectedValue={data.category} onValueChange={(v) => {
+					<TextInput placeholder="名称" value={data[0].name} onChangeText={(v) => setData(old => ({...old!, name: v}))}/>
+					<Picker selectedValue={data[0].category} onValueChange={(v) => {
 						setData(old => ({ ...old!, category: v }));
 					}} >
 						<Picker.Item value={1} label="吃" />
 						<Picker.Item value={2} label="玩" />
 						<Picker.Item value={4} label="吃 + 玩" />
 					</Picker>
-					<TextInput placeholder="描述" value={data.description} onChangeText={v => setData(old => ({ ...old!, description: v }))} />
+					<TextInput placeholder="描述" value={data[0].description} onChangeText={v => setData(old => ({ ...old!, description: v }))} />
 					{ token && images ? <Upload ids={images} setIDs={setImages} headers={{"JWT_TOKEN": token}}/> : <></> }
 					<Button title="修改" disabled={!data} onPress={() => {
 						const body = {
-							name: data!.name, 
-							category: data!.category,
-							description: data!.description,
+							name: data[0].name, 
+							category: data[0].category,
+							description: data[0].description,
 							images: images};
 						update(route.params.id, body);}} />
 				</ScrollView>
@@ -234,26 +242,31 @@ interface DetailProps extends ViewProps {
 
 export const Detail = ({navigation, route}: DetailProps) => {
 	const token = useToken();
+	const coords = useCoords();
 	const [data, setData] = useState<Location>();
-	const [status, setStatus] = useState<"Loading"| "Complete"| "Error">("Loading");
 	let isMounted = true;
 
-
 	useEffect(() => {
-		detail(route.params.id).then(res => { if (isMounted) { setData(res); setStatus("Complete") }}).catch(e => { setStatus("Error"); console.error(e)});
+		if (token === null) {
+			navigation.navigate("Signin", {from: "LocationDetail"});
+			return
+		}
+		if (!token || !coords) {
+			return
+		}
+		detail(route.params.id, token, coords.latitude, coords.longitude).then(res => { if (isMounted) { setData(res) }}).catch(e => { setStatus("Error"); console.error(e)});
 		return () => {
 			isMounted = false;
 		}
-	}, []);
+	}, [token, coords]);
 
-	return status === "Loading" ? <ActivityIndicator animating={true} /> : 
-		status === "Error" ? <TouchableOpacity onPress={() => {setStatus("Loading")}}><View><Text>获取数据失败， 点击重试</Text></View></TouchableOpacity>:
+	return !data ? <ActivityIndicator animating={true} /> : 
 		<WithNavigation current="locations" navigation={navigation}>
-			<Text>{data?.name}</Text>
-			<Text>{data?.description}</Text>
-			<Text>{ data?.category === 1 ? "吃" : data?.category === 2 ? "玩" : "吃 + 玩" }</Text>
+			<Text>{data[0].name}</Text>
+			<Text>{data[0].description}</Text>
+			<Text>{ data[0].category === 1 ? "吃" : data[0].category === 2 ? "玩" : "吃 + 玩" }</Text>
 			{
-				data?.images.map(img => <MyImage key={img.id} id={img.id} width="100%" height={300}/>)
+				data[3].map(img => <MyImage key={img.id} id={img.id} width="100%" height={300}/>)
 			}
 		</WithNavigation>
 }
@@ -273,7 +286,7 @@ const styles = StyleSheet.create({
 		flexWrap: "wrap",
 		flexDirection: "row",
 		width: "100%",
-		justifyContent: "space-between",
+		justifyContent: "space-around",
 		alignItems: "center",
 	},
 	indicator: {
