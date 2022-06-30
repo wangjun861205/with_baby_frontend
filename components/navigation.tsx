@@ -1,5 +1,5 @@
 import { PropsWithChildren } from "react";
-import { View, ViewProps, Button, StyleSheet, ScrollView, Image, Text } from "react-native";
+import { View, ViewProps, Button, StyleSheet, ScrollView, Image, Text, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BASE_URL } from "@env"
 
@@ -14,10 +14,10 @@ interface WithNavigationProps extends ViewProps {
 export const WithNavigation = ({children, current, navigation, token, username, avatar}: PropsWithChildren<WithNavigationProps> ) => {
     const insets = useSafeAreaInsets();
     return  <View style={{paddingTop: insets.top * 1.5,  flex: 1, flexDirection: "column"}}>
-                <View style={styles.headbar}>
-                    { avatar ? <Image source={{uri: BASE_URL + `/api/upload/${avatar}`, headers:{JWT_TOKEN: token}}} /> : <></> }
-                    <Text style={styles.username}>{username}</Text>
-                </View>
+                    <TouchableOpacity style={styles.headbar} onPress={() => {navigation.navigate("Profile")}}>
+                        { avatar ? <Image style={styles.avatar} source={{uri: BASE_URL + `/api/upload/${avatar}`, headers:{JWT_TOKEN: token}}} /> : <></> }
+                        <Text style={styles.username}>{username}</Text>
+                    </TouchableOpacity>
                 <View style={styles.content}>
                     <ScrollView>
                     { children }
@@ -60,6 +60,12 @@ const styles = StyleSheet.create({
     },
     username: {
         paddingRight: 20,
+    },
+    avatar: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        marginRight: 20,
     }
 
 

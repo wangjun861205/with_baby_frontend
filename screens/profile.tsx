@@ -1,8 +1,11 @@
 import { useState } from "react";
-import {View, Button, Text} from "react-native";
+import {View, Button, Text, ActivityIndicator} from "react-native";
 import { useProfile } from "../hooks/profile";
 import { Upload } from "../components/upload";
 import { BASE_URL } from "@env";
+import { WithNavigation } from "../components/navigation";
+import { getItemAsync, setItemAsync } from "expo-secure-store"
+
 
 const Profile = ({navigation, route}: {navigation: any, route: any}) => {
     return <View>
@@ -13,18 +16,37 @@ const Profile = ({navigation, route}: {navigation: any, route: any}) => {
 
 export default Profile;
 
-export const Edit = ({navigation, route}: {navigation: any, route: any}) => {
+export const Update = ({navigation, route}: {navigation: any, route: any}) => {
     const profile = useProfile();
     const [avatar, setAvatar] = useState<number[]>([])
     const edit = (id: number, token: string) => {
-        fetch(BASE_URL + `/api/user/${id}`, {
+        if (avatar.length == 0) {
+            alert("请选择图片");
+            return
+        }
+        fetch(BASE_URL + `/api/my/avatar`, {
+            method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 JWT_TOKEN: token
             },
-        })
+            body: JSON.stringify({avatar: avatar[0]}),
+        }).then(res => {if (res.status !== 200) { res.text().then(s => console.error(s))} else { getItemAsync("PROFILE").then(v => {
+            if (!v) {
+                navigation.navigate("Signin");
+                return
+            }
+            const p = JSON.parse(v);
+            p.avatar = avatar[0];
+            setItemAsync("PROFILE", JSON.stringify(p)).then(() => {
+                navigation.navigate("LocationList");
+                return
+            }).catch(e => console.error(e));
+
+        }).catch(e => console.error(e))}}).catch(e => console.error(e));
     }
-    return <view>
-        <Upload ids={avatar} setIDs={setAvatar}/>
-    </view>
+    return profile ? <WithNavigation current="me" navigation={navigation} token={profile.token} username={profile.name}>
+        <Upload ids={avatar} setIDs={setAvatar} headers={{"JWT_TOKEN": profile.token}}/>
+        <Button title="修改" onPress={() => {edit(profile?.id, profile.token)}} />
+    </WithNavigation> : <ActivityIndicator animating={true} />
 }

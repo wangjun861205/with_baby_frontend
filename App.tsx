@@ -4,13 +4,14 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Signin from "./screens/signin";
 import Home from './screens/home';
-import Profile from './screens/profile';
+import { Update as UpdateProfile}  from './screens/profile';
 import { PlayingList, PlayingCreate } from "./screens/playing"
 import * as Location from "expo-location";
 import { Photo } from "./screens/photo";
 import { EatingCreate } from './screens/eating';
 import { CreateLocation, LocationList, Edit as EditLocation, Detail as LocationDetail } from './screens/location';
 import { Create as CreateMemory, List as MemoryList} from './screens/memory'; 
+
 
 
 
@@ -24,7 +25,7 @@ export default function App() {
       <Stack.Navigator initialRouteName='LocationList' screenOptions={{headerShown: false, animation: 'none'}}>
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Signin" component={Signin} />
-        <Stack.Screen name="Profile" component={Profile} />
+        <Stack.Screen name="Profile" component={UpdateProfile} />
         <Stack.Screen name="PlayingList" component={PlayingList} />
         <Stack.Screen name="PlayingCreate" component={PlayingCreate} />
         <Stack.Screen name="Photo" component={Photo} />
