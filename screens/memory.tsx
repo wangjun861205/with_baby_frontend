@@ -6,7 +6,9 @@ import { useProfile } from "../hooks/profile";
 import { BASE_URL } from "@env";
 import { WithNavigation } from "../components/navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { list } from "../apis/memory";
+import { list, nearMemories, userNearMemories } from "../apis/memory";
+import { List as MemoryList } from "../components/memory";
+import { NearMemories as NearMemoriesResp } from "../models/responses";
 
 
 interface CreateProps extends ViewProps {
@@ -92,6 +94,31 @@ export const List = ({navigation, route}: {navigation: any, route: any}) => {
             </View>))
         }
     </WithNavigation>
+}
+
+export const NearMemories = ({navigation, route}: {navigation: any, route: any}) => {
+    const [limit, setLimit] = useState(10);
+    const [offset, setOffset] = useState(0);
+    const [data, setData] = useState<NearMemoriesResp>();
+    const profile = useProfile();
+    const coords = useCoords();
+    let isMounted = true;
+
+    useEffect(() => {
+        if (!profile || !coords) {
+            return () => { isMounted = true };
+        }
+        nearMemories({latitude: coords.latitude, longitude: coords.longitude, limit: limit, offset: offset}, profile, setData);
+    }, [profile, coords, limit, offset])
+
+    return data && profile 
+    ? 
+    <WithNavigation current="memories" navigation={navigation} profile={profile}>
+        <MemoryList list={data.list} onPress={(id: number) => {}} />      
+        <Button title="test" onPress={() => { setOffset(10)}} />
+    </WithNavigation>
+    :
+    <ActivityIndicator animating={true} />
 }
 
 

@@ -113,7 +113,11 @@ type Location = [
 		id: number,
 		fetch_code: string
 	}[],
-	number[]
+	number[],
+	{
+		total: number,
+		count: number,
+	}
 ]
 
 interface LocationListProps extends ViewProps {
@@ -145,7 +149,7 @@ export const LocationList = ({ navigation }: LocationListProps) => {
 		}
 	}, [limit, offset, isFocuse, profile, coords]);
 	return !coords || !profile || !locs ?  <ActivityIndicator animating={true} /> :
-		<WithNavigation current="locations" navigation={navigation} token={profile.token} username={profile.name} avatar={profile.avatar}>
+		<WithNavigation current="locations" navigation={navigation} profile={profile}>
 		<View>
 			{
 				locs.map(l =>
@@ -156,14 +160,17 @@ export const LocationList = ({ navigation }: LocationListProps) => {
 								<Text>{l[0].description}</Text>
 								<Text>由{l[1].name}发现</Text>
 								<Text>距离:{l[4]}</Text>
+								<Text>评价:{l[5].total / l[5].count}</Text>
 								{
 									l[3].map(img => (<Image key={img.id} style={{ width: 100, height: 100 }} source={{ uri: BASE_URL + `/api/upload/${img.id}`, headers: { JWT_TOKEN: profile.token } }} />))
 								}
 							</View>
 							<View style={styles.row}>
 								<Button title="编辑" onPress={() => { navigation.navigate("EditLocation", { id: l[0].id }) }} />
-								<Button title="添加回忆" onPress={() => { navigation.navigate("CreateMemory", { locationID: l[0].id }) }} />
+								{/* <Button title="添加回忆" onPress={() => { navigation.navigate("CreateMemory", { locationID: l[0].id }) }} /> */}
 								<Button title="回忆" onPress={() => { navigation.navigate("MemoryList", { locationID: l[0].id }) }} />
+								<Button title="评价" onPress={() => navigation.navigate("UpsertComment", { location_id: l[0].id })} />
+								<Button title="评论" onPress={() => navigation.navigate("CommentList", { location_id: l[0].id })} />
 							</View>
 						</View>
 					</TouchableOpacity>)

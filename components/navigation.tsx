@@ -2,21 +2,20 @@ import { PropsWithChildren } from "react";
 import { View, ViewProps, Button, StyleSheet, ScrollView, Image, Text, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BASE_URL } from "@env"
+import { Profile } from "../hooks/profile";
 
 interface WithNavigationProps extends ViewProps {
     current: string,
     navigation: any,
-    token: string,
-    username: string,
-    avatar?: number,
+    profile: Profile,
 }
 
-export const WithNavigation = ({children, current, navigation, token, username, avatar}: PropsWithChildren<WithNavigationProps> ) => {
+export const WithNavigation = ({children, current, navigation, profile}: PropsWithChildren<WithNavigationProps> ) => {
     const insets = useSafeAreaInsets();
     return  <View style={{paddingTop: insets.top * 1.5,  flex: 1, flexDirection: "column"}}>
                     <TouchableOpacity style={styles.headbar} onPress={() => {navigation.navigate("Profile")}}>
-                        { avatar ? <Image style={styles.avatar} source={{uri: BASE_URL + `/api/upload/${avatar}`, headers:{JWT_TOKEN: token}}} /> : <></> }
-                        <Text style={styles.username}>{username}</Text>
+                        { profile.avatar ? <Image style={styles.avatar} source={{uri: BASE_URL + `/api/upload/${profile.avatar}`, headers:{JWT_TOKEN: profile.token}}} /> : <></> }
+                        <Text style={styles.username}>{profile.name}</Text>
                     </TouchableOpacity>
                 <View style={styles.content}>
                     <ScrollView>
@@ -25,8 +24,8 @@ export const WithNavigation = ({children, current, navigation, token, username, 
                 </View>
                 <View style={styles.bar}>
                     <View style={current === "locations" ? [ styles.button, styles["high-light"]]: styles.button}><Button title="发现" onPress={() => {navigation.navigate("LocationList")}}/></View>
-                    <View style={current === "memories" ? [ styles.button, styles["high-light"]]: styles.button }><Button title="回忆" /></View>
-                    <View style={current === "me" ? [ styles.button, styles["high-light"]]: styles.button}><Button title="我的" /></View>
+                    <View style={current === "memories" ? [ styles.button, styles["high-light"]]: styles.button }><Button title="回忆" onPress={() => navigation.navigate("NearMemories") }/></View>
+                    <View style={current === "my" ? [ styles.button, styles["high-light"]]: styles.button}><Button title="我的" onPress={() => navigation.navigate("My")}/></View>
                 </View>
             </View>
 }
