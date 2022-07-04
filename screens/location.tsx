@@ -164,14 +164,13 @@ export const LocationList = ({ navigation }: LocationListProps) => {
 					</View>
 					<View style={styles.row}>
 						<Button title="编辑" onPress={() => { navigation.navigate("EditLocation", { id: l.item[0].id }) }} />
-						{/* <Button title="添加回忆" onPress={() => { navigation.navigate("CreateMemory", { locationID: l[0].id }) }} /> */}
 						<Button title="回忆" onPress={() => { navigation.navigate("MemoryList", { locationID: l.item[0].id }) }} />
 						<Button title="评价" onPress={() => navigation.navigate("UpsertComment", { location_id: l.item[0].id })} />
 						<Button title="评论" onPress={() => navigation.navigate("CommentList", { location_id: l.item[0].id })} />
 					</View>
 				</View>
 			</TouchableOpacity>)
-			}>
+			} onEndReached={() => {console.log("end")}} onEndReachedThreshold={0.2}>
 			</FlatList>
 		</WithNavigation >
 }

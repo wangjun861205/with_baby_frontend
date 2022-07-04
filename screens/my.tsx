@@ -5,7 +5,7 @@ import { View, TouchableOpacity, Text, ActivityIndicator, StyleSheet } from "rea
 export const My = ({navigation, route}: {navigation: any, route: any}) => {
     const profile = useProfile();
     return profile ? 
-    <WithNavigation current="my" navigation={navigation} token={profile.token} username={profile.name} avatar={profile.avatar} >
+    <WithNavigation current="my" navigation={navigation} profile={profile}>
         <View style={styles.container}>
             <TouchableOpacity style={styles.item}><Text>我的发现</Text></TouchableOpacity>
             <TouchableOpacity style={styles.item}><Text>我的回忆</Text></TouchableOpacity>

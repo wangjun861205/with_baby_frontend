@@ -10,14 +10,12 @@ export type Profile = {
 }
 
 export const useProfile = () => {
-    const [profile, setProfile] = useState<Profile>();
+    const [profile, setProfile] = useState<Profile | null>();
     const [retry, setRetry] = useState(0);
     useEffect(() => {
         getItemAsync("PROFILE").then(v => {
             if (!v) {
-                setTimeout(() => {
-                    setRetry(old => old + 1);
-                }, 2000);  
+                setProfile(null);
                 return
             }
            setProfile(JSON.parse(v));

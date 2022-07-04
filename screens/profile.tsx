@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState , useEffect} from "react";
 import {View, Button, Text, ActivityIndicator} from "react-native";
 import { useProfile } from "../hooks/profile";
 import { Upload } from "../components/upload";
 import { BASE_URL } from "@env";
 import { WithNavigation } from "../components/navigation";
 import { getItemAsync, setItemAsync } from "expo-secure-store"
+import { deleteItemAsync } from "expo-secure-store"
 
 
 const Profile = ({navigation, route}: {navigation: any, route: any}) => {
@@ -18,7 +19,12 @@ export default Profile;
 
 export const Update = ({navigation, route}: {navigation: any, route: any}) => {
     const profile = useProfile();
-    const [avatar, setAvatar] = useState<number[]>([])
+    const [avatar, setAvatar] = useState<number[]>([]);
+    useEffect(() => {
+        if (profile?.avatar) {
+            setAvatar([profile.avatar]);
+        }
+    }, [profile]);
     const edit = (id: number, token: string) => {
         if (avatar.length == 0) {
             alert("请选择图片");
@@ -45,8 +51,20 @@ export const Update = ({navigation, route}: {navigation: any, route: any}) => {
 
         }).catch(e => console.error(e))}}).catch(e => console.error(e));
     }
-    return profile ? <WithNavigation current="me" navigation={navigation} token={profile.token} username={profile.name}>
+
+    const logout = () => {
+        deleteItemAsync("PROFILE").then(() => {
+            navigation.navigate("Signin");
+        }).catch(e => console.error(e));
+    }
+
+    return profile 
+    ? 
+    <WithNavigation current="me" navigation={navigation} profile={profile}>
         <Upload ids={avatar} setIDs={setAvatar} headers={{"JWT_TOKEN": profile.token}}/>
         <Button title="修改" onPress={() => {edit(profile?.id, profile.token)}} />
-    </WithNavigation> : <ActivityIndicator animating={true} />
+        <Button title="退出" onPress={logout} />
+    </WithNavigation> 
+    : 
+    <ActivityIndicator animating={true} />
 }

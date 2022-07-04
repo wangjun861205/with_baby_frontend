@@ -18,9 +18,7 @@ export const WithNavigation = ({children, current, navigation, profile}: PropsWi
                         <Text style={styles.username}>{profile.name}</Text>
                     </TouchableOpacity>
                 <View style={styles.content}>
-                    <ScrollView>
                     { children }
-                    </ScrollView>
                 </View>
                 <View style={styles.bar}>
                     <View style={current === "locations" ? [ styles.button, styles["high-light"]]: styles.button}><Button title="发现" onPress={() => {navigation.navigate("LocationList")}}/></View>
@@ -48,14 +46,16 @@ const styles = StyleSheet.create({
         height: "100%",
         alignItems: "center",
         justifyContent: "center",
+        flex: 1,
     },
     "high-light": {
-        backgroundColor: "#ffffff",
+        backgroundColor: "#FE9447",
     },
     headbar: {
         flex: 1,
         flexDirection: "row-reverse",  
         alignItems: "center",
+        backgroundColor: '#EE5407',
     },
     username: {
         paddingRight: 20,
